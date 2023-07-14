@@ -54,7 +54,9 @@ app.get('/swell/:cityCode/dia/:days', async (request, response) => {
 
     newSwellArr.ondas = [];
 
-    console.log(jsonData)
+    // console.log(JSON.stringify(jsonData))
+    // console.log(JSON.stringify(newSwellArr))
+    response.status(200).json(newSwellArr);
 
     jsonData.cidade.previsao.forEach((oneDay) => {
       const datePart = oneDay.dia.split(' ');
@@ -83,15 +85,15 @@ app.get('/swell/:cityCode/dia/:days', async (request, response) => {
       });
 
       
-      response.json(newItem);
+      return newItem;
     });
 
     if (newSwellArr.ondas.length > days) {
       console.log(newSwellArr.ondas)
       newSwellArr.ondas = newSwellArr.ondas.slice(0, days);
     }
-    console.log(newSwellArr)
-    response.json(newSwellArr);
+
+    return newSwellArr;
   } catch (e) {
     return null;
   }

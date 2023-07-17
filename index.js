@@ -11,25 +11,6 @@ const port = 3000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-function formatPrediction(unformattedData) {
-  const formattedData = {
-    cidade: unformattedData.cidade.nome,
-    estado: unformattedData.cidade.uf,
-    atualizado_em: unformattedData.cidade.atualizacao,
-    clima: unformattedData.cidade.previsao.map((oneDay) => {
-      return {
-        data: oneDay.dia,
-        condicao: oneDay.tempo,
-        condicao_desc: CONDITION_DESCRIPTIONS[oneDay.tempo],
-        min: oneDay.minima,
-        max: oneDay.maxima,
-        indice_uv: oneDay.iuv,
-      };
-    }),
-  };
-  return formattedData;
-}
-
 app.get('/', (request, response) => {
     response.send('Hello world');
 });
@@ -57,30 +38,19 @@ app.get('/cities?city:name', async (request, response) => {
     responseEncoding: 'binary',
   });
 
-  // const formatCity = citiesData.map((city) => {
-  //   return [
-  //     json({
-  //       nome: city.nome,
-  //       estado: city.uf,
-  //       id: city.id
-  //   })];
-  // }, []);
+  const formatCityData = parser.parse(citiesData.data);
+  const newCity = {
+    nome: formatCityData.cidade.nome,
+    estado: formatCityData.cidade.uf,
+    id: formatCityData.cidade.id
+  } || [];
 
-  const formatCity = parser.parse(citiesData.data);
-  const newCity = formatCity.map((city) => {
-      return [
-        json({
-          nome: city.nome,
-          estado: city.uf,
-          id: city.id
-      })];
-    }, []);
-  console.log(formatCity);
+  console.log(formatCityData);
   console.log(newCity);
 
   if (parser.parse(citiesData.data).cidades.cidade) {
-    console.log(parser.parse(citiesData.data).cidades.cidade.formatCity);
-    response.status(200).json(parser.parse(citiesData.data).cidades.cidade.formatCity);
+    console.log(parser.parse(citiesData.data).cidades.cidade.formatCityData);
+    response.status(200).json(parser.parse(citiesData.data).cidades.cidade.formatCityData);
   }
   return [];
 })
@@ -103,44 +73,9 @@ app.get('/swell/:cityCode/dia/:days', async (request, response) => {
       ondas: [],
     };
 
-    let oldDate = '';
-
-    let newItem = {};
-
     newSwellArr.ondas = [];
 
-    // console.log(JSON.stringify(jsonData))
-    // console.log(JSON.stringify(newSwellArr))
     response.status(200).json(newSwellArr);
-
-    jsonData.cidade.previsao.forEach((oneDay) => {
-      const datePart = oneDay.dia.split(' ');
-      const [date, hour, tz] = datePart;
-
-      if (date !== oldDate) {
-        [oldDate] = datePart;
-
-        newItem = {};
-        [newItem.data] = normalizeBrazilianDate(oldDate, '-', false)
-          .toISOString()
-          .split('T');
-        newItem.dados_ondas = [];
-        newSwellArr.ondas.push(newItem);
-      }
-
-      newItem.dados_ondas.push({
-        hora: `${hour.replace('h', ':')}00${tz}`,
-        vento: oneDay.vento,
-        direcao_vento: oneDay.vento_dir,
-        direcao_vento_desc: WIND_SWELL_DIRECTIONS[oneDay.vento_dir],
-        altura_onda: oneDay.altura,
-        direcao_onda: oneDay.direcao,
-        direcao_onda_desc: WIND_SWELL_DIRECTIONS[oneDay.direcao],
-        agitation: oneDay.agitacao,
-      });
-
-      return newItem;
-    });
 
     if (newSwellArr.ondas.length > days) {
       console.log(newSwellArr.ondas)
@@ -148,7 +83,6 @@ app.get('/swell/:cityCode/dia/:days', async (request, response) => {
       response.status(200).json(newSwellArr.ondas);
     }
 
-    //response.status(200).json(newSwellArr);
     return newSwellArr;
   } catch (e) {
     return null;
@@ -164,10 +98,25 @@ app.get('/weather', async (request, response) => {
     }
   );
 
-  const parsed = parser.parse(currentData.data);
+  const parsedData = parser.parse(currentData.data);
+  // const fomattedData = {
+  //   cidade: parsedData.cidade.nome,
+  //   estado: parsedData.cidade.uf,
+  //   atualizado_em: parsedData.cidae.atualizacao,
+  //   clima: parsedData.cidade.previsao.map((oneDay) => {
+  //     return {
+  //       data: oneDay.dia,
+  //       condicao: oneDay.tempo,
+  //       condicao_desc: CONDITION_DESCRIPTIONS[oneDay.tempo],
+  //       min: oneDay.minima,
+  //       max: oneDay.maxima,
+  //       indice_uv: oneDay.iuv,
+  //     };
+  //   }),
+  // }
 
-  if (parsed.capitais.metar) {
-    response.status(200).json(parsed.capitais.metar);
+  if (parsedData.capitais.metar) {
+    response.status(200).json(parsedData.capitais.metar);
   }
   return [];
 })

@@ -1,0 +1,1 @@
+module.exports.AllService = require('./allService.js');

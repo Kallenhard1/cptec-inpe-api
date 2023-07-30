@@ -1,5 +1,5 @@
 const express = require('express');
-const allRoutes = require('./allRoutes.js');
+const allRoutes = require('./allRoutes.routes.js');
 
 const router = express.Router();
 

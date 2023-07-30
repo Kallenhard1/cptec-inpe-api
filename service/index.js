@@ -1,1 +1,1 @@
-module.exports.AllService = require('./allService.js');
+module.exports.AllService = require('./allService.service.js');
